@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Global Logistics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = { theme: { extend: { colors: { primary: '#0052cc', primaryHover: '#003d99' }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
+    </script>
+    <style>
+        body { background: #f9fafb; color: #1f2937; }
+        .glass-panel { background: white; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .toast { position: fixed; bottom: 6; right: 6; z-index: 50; transition: all 0.3s; }
+        .event-item:hover .event-actions { opacity: 1; }
+        .event-actions { opacity: 0; transition: opacity 0.2s; }
+    </style>
+</head>
+<body class="font-sans min-h-screen">
+
+    <div class="fixed top-0 inset-x-0 bg-white border-b border-gray-200 shadow-sm z-30">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-primary rounded flex items-center justify-center text-white"><i class="fa-solid fa-earth-americas text-lg"></i></div>
+                <span class="font-bold text-lg tracking-tight text-gray-900">Admin Control Center</span>
+            </div>
+            <button id="logoutBtn" class="hidden bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium px-4 py-2 rounded border border-gray-300">Sign Out</button>
+        </div>
+    </div>
+
+    <div id="loginGateway" class="w-full max-w-md my-auto pt-24 pb-10 px-4">
+        <div class="glass-panel rounded-2xl p-8">
+            <h1 class="text-2xl font-bold text-gray-900 text-center mb-6">Admin Access</h1>
+            <div id="adminErrorMsg" class="hidden mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm text-center rounded"></div>
+            <form id="adminLoginForm" class="space-y-4">
+                <div><label class="block text-sm font-semibold text-gray-700">Username</label><input type="text" id="adminUsername" required value="admin" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:border-primary outline-none"></div>
+                <div><label class="block text-sm font-semibold text-gray-700">Password</label><input type="password" id="adminPassword" required value="admin123" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:border-primary outline-none"></div>
+                <button type="submit" class="w-full py-3 bg-primary hover:bg-primaryHover text-white font-bold rounded-lg shadow-md transition">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="adminDashboard" class="hidden w-full max-w-7xl px-4 pt-24 pb-12 space-y-6 mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="glass-panel rounded-xl p-6">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2 mb-4"><i class="fa-solid fa-file-circle-plus text-primary"></i> Create New Consignment</h3>
+                <form id="createWaybillForm" class="space-y-3">
+                    <input name="waybillId" placeholder="Waybill ID (e.g. TRK-2026-XXXX)" required class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm">
+                    <input name="owner" placeholder="Owner Name" required class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm">
+                    <input name="route" placeholder="Route (e.g. Port Sudan → LA)" required class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm">
+                    <input name="pin" placeholder="Client PIN (e.g. track2026)" required class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm">
+                    <button type="submit" class="w-full py-2.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition">Create Waybill</button>
+                </form>
+            </div>
+            <div class="glass-panel rounded-xl p-6">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2 mb-4"><i class="fa-solid fa-pen-to-square text-primary"></i> Add Telemetry Event</h3>
+                <form id="addEventForm" class="space-y-3">
+                    <select id="eventWaybillSelect" required class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm bg-white"><option value="">Select a Waybill...</option></select>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input name="day" placeholder="Day (e.g. 5)" type="number" required class="border border-gray-300 rounded px-3 py-2 text-sm">
+                        <input name="date" placeholder="Date (YYYY-MM-DD)" type="date" required class="border border-gray-300 rounded px-3 py-2 text-sm">
+                    </div>
+                    <input name="sector" placeholder="Sector Name" required class="w-full border border-gray-300 rounded px-3 py-2 text-sm">
+                    <input name="knots" placeholder="Speed (KTS)" type="number" step="0.1" required class="w-full border border-gray-300 rounded px-3 py-2 text-sm">
+                    <input name="seaState" placeholder="Sea State (e.g. REGULATED)" class="w-full border border-gray-300 rounded px-3 py-2 text-sm">
+                    <input name="title" placeholder="Event Title" required class="w-full border border-gray-300 rounded px-3 py-2 text-sm">
+                    <textarea name="text" placeholder="Detailed log text" required class="w-full border border-gray-300 rounded px-3 py-2 text-sm h-16"></textarea>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input name="lat" placeholder="Latitude" class="border border-gray-300 rounded px-3 py-2 text-sm">
+                        <input name="lon" placeholder="Longitude" class="border border-gray-300 rounded px-3 py-2 text-sm">
+                    </div>
+                    <input name="status" placeholder="Status (e.g. EN ROUTE)" required class="w-full border border-gray-300 rounded px-3 py-2 text-sm">
+                    <button type="submit" class="w-full py-2.5 bg-primary hover:bg-primaryHover text-white font-bold rounded-lg transition">Publish Event</button>
+                </form>
+            </div>
+        </div>
+        <div class="glass-panel rounded-xl p-6">
+            <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2 mb-4"><i class="fa-solid fa-list-check text-primary"></i> Active Consignments & Events</h3>
+            <div id="waybillListContainer" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast hidden bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg text-sm font-medium"></div>
+
+    <script>
+        const API_BASE = 'https://logistics-backend-production-c52f.up.railway.app';
+
+        let token = localStorage.getItem('adminToken');
+
+        function showToast(msg, type = 'success') {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.className = `toast ${type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white px-6 py-3 rounded-lg shadow-lg text-sm font-medium`;
+            t.classList.remove('hidden');
+            setTimeout(() => t.classList.add('hidden'), 3000);
+        }
+
+        if (token) {
+            document.getElementById('loginGateway').classList.add('hidden');
+            document.getElementById('adminDashboard').classList.remove('hidden');
+            document.getElementById('logoutBtn').classList.remove('hidden');
+            loadWaybills();
+        }
+
+        document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('adminUsername').value.trim();
+            const password = document.getElementById('adminPassword').value.trim();
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Login failed');
+                token = data.token;
+                localStorage.setItem('adminToken', token);
+                document.getElementById('loginGateway').classList.add('hidden');
+                document.getElementById('adminDashboard').classList.remove('hidden');
+                document.getElementById('logoutBtn').classList.remove('hidden');
+                await loadWaybills();
+                showToast('Logged in successfully');
+            } catch (err) {
+                document.getElementById('adminErrorMsg').innerText = err.message;
+                document.getElementById('adminErrorMsg').classList.remove('hidden');
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('adminToken');
+            token = null;
+            document.getElementById('adminDashboard').classList.add('hidden');
+            document.getElementById('loginGateway').classList.remove('hidden');
+            document.getElementById('logoutBtn').classList.add('hidden');
+        });
+
+        async function loadWaybills() {
+            const res = await fetch(`${API_BASE}/api/admin/waybills`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const list = await res.json();
+            const select = document.getElementById('eventWaybillSelect');
+            select.innerHTML = '<option value="">Select a Waybill...</option>';
+            const container = document.getElementById('waybillListContainer');
+            container.innerHTML = '';
+            for (const w of list) {
+                select.innerHTML += `<option value="${w.waybillId}">${w.waybillId} - ${w.owner}</option>`;
+                const detailRes = await fetch(`${API_BASE}/api/admin/waybills/${w.waybillId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const full = await detailRes.json();
+                const card = document.createElement('div');
+                card.className = 'glass-panel rounded-lg p-4 border-l-4 border-l-primary';
+                let eventsHtml = '';
+                if (full.events && full.events.length > 0) {
+                    eventsHtml = full.events.map((ev, idx) => `<div class="event-item flex justify-between items-center bg-gray-50 p-2 rounded mt-1 text-xs border border-gray-100 relative"><div><strong>Day ${ev.day}</strong> - ${ev.title || ev.sector}</div><div class="event-actions flex gap-2"><button onclick="editEvent('${w.waybillId}', ${idx})" class="text-blue-600 hover:text-blue-800"><i class="fa-regular fa-pen-to-square"></i></button><button onclick="deleteEvent('${w.waybillId}', ${idx})" class="text-red-600 hover:text-red-800"><i class="fa-regular fa-trash-can"></i></button></div></div>`).join('');
+                } else { eventsHtml = '<p class="text-xs text-gray-400 italic">No events yet</p>'; }
+                card.innerHTML = `<div class="flex justify-between items-start"><div><p class="font-bold text-gray-900 text-sm">${w.waybillId}</p><p class="text-xs text-gray-500">${w.owner}</p><p class="text-xs text-gray-400">${w.route}</p></div></div><div class="mt-2 space-y-1">${eventsHtml}</div>`;
+                container.appendChild(card);
+            }
+        }
+
+        document.getElementById('createWaybillForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            const payload = { waybillId: data.waybillId, owner: data.owner, route: data.route, pin: data.pin };
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/waybills`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(payload) });
+                if (!res.ok) throw new Error('Failed to create');
+                showToast('Waybill created successfully!');
+                e.target.reset();
+                await loadWaybills();
+            } catch (err) { showToast(err.message, 'error'); }
+        });
+
+        document.getElementById('addEventForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            const waybillId = data.waybillId;
+            delete data.waybillId;
+            data.day = parseInt(data.day);
+            data.knots = parseFloat(data.knots);
+            if (!data.seaState) delete data.seaState;
+            if (!data.lat) delete data.lat;
+            if (!data.lon) delete data.lon;
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/waybills/${waybillId}/events`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(data) });
+                if (!res.ok) throw new Error('Failed to add event');
+                showToast('Event added!');
+                e.target.reset();
+                document.getElementById('eventWaybillSelect').value = waybillId;
+                await loadWaybills();
+            } catch (err) { showToast(err.message, 'error'); }
+        });
+
+        async function editEvent(waybillId, idx) {
+            const res = await fetch(`${API_BASE}/api/admin/waybills/${waybillId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const full = await res.json();
+            const ev = full.events[idx];
+            const newTitle = prompt('Edit Title:', ev.title);
+            if (newTitle !== null) { ev.title = newTitle; const text = prompt('Edit Text:', ev.text); if (text !== null) ev.text = text; full.events[idx] = ev; const updateRes = await fetch(`${API_BASE}/api/admin/waybills/${waybillId}/events`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ events: full.events }) }); if (updateRes.ok) { showToast('Event updated'); loadWaybills(); } else { showToast('Update failed', 'error'); } }
+        }
+
+        async function deleteEvent(waybillId, idx) {
+            if (!confirm('Delete this event?')) return;
+            const res = await fetch(`${API_BASE}/api/admin/waybills/${waybillId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const full = await res.json();
+            full.events.splice(idx, 1);
+            const updateRes = await fetch(`${API_BASE}/api/admin/waybills/${waybillId}/events`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ events: full.events }) });
+            if (updateRes.ok) { showToast('Event deleted'); loadWaybills(); } else { showToast('Delete failed', 'error'); }
+        }
+    </script>
+</body>
+</html>
